@@ -121,6 +121,9 @@ REM	     picked up from correct places, this is done by
 REM	     putting compiler at the head of the PATH, then
 REM	     unix tools and then C:\windows\system32.
 REM	     Move DIFF_SET after AWK_SET to ensure AWK_CMD is set.
+REM	01-Oct-2010 (bonro01)
+REM	     Don't prompt for MKSLOC or SHELL if they are already set.
+REM	     
 REM
 
 :TRUNK_LOOP
@@ -185,7 +188,7 @@ if exist "%XERCESCROOT%\bin\xerces-c_2_7.dll" set XERCVERS=2_7
 if exist "%XERCESCROOT%\bin\xerces-c_2_8.dll" set XERCVERS=2_8
 if exist "%XERCESCROOT%\bin\xerces-c_3_0.dll" set XERCVERS=3_0
 if "%XERCVERS"=="" echo XERCVERS could not be determined
-echo XERCVERS=  %XERCVERS%
+echo XERCVERS=%XERCVERS%
 :GEOS_LOOP
 if "%GEOSROOT%"=="" SET /P GEOSROOT=Root location of GEOS source and lib (default is %ING_ROOT%\geos):
 if "%GEOSROOT%"=="" SET GEOSROOT=%ING_ROOT%\geos
@@ -232,10 +235,12 @@ call settmp.bat
 rm settmp.bat
 goto FLEX_SET
 
-:GET_UNXLOC
+:PROMPT_UNXLOC
 SET /P MKSLOC=Bin location of the UNIX tools: 
-if not exist "%MKSLOC%\ls.exe" echo This location does not contain the appropriate set of UNIX tools.& goto GET_UNXLOC
+:GET_UNXLOC
+if not exist "%MKSLOC%\ls.exe" echo This location does not contain the appropriate set of UNIX tools.& goto PROMPT_UNXLOC
 SET PATH=%WindowsSdkDir%\bin;%MKSLOC%;%PATH% & goto CYGWIN_CHK
+
 :FLEX_SET
 if "%USE_CYGWIN%"=="" goto SHELL_SET
 REM if FLEX_FLAG is not set then set according to version of flex 
@@ -251,6 +256,7 @@ if %FLEXVER% LSS 31 SET FLEX_FLAG=
 SET FLEXVER=
 
 :SHELL_SET
+if NOT "%SHELL%"=="" goto AWK_SET
 if "%CPU%"=="AMD64" if NOT "%USE_CYGWIN%"=="" SET /P SHELL=Full path to the cygwin shell (default C:\cygwin\bin\sh.exe):
 if "%CPU%"=="AMD64" if NOT "%USE_CYGWIN%"=="" if "%SHELL%"=="" set SHELL=c:\cygwin\bin\sh.exe & goto AWK_SET
 if "%CPU%"=="AMD64" if NOT "%USE_CYGWIN%"=="" if NOT "%SHELL%"=="" goto AWK_SET
